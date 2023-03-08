@@ -1,0 +1,48 @@
+    C0 
+cmp: 1
+beq: 3
+add: 0
+mov: 2
+16 bits por instruccion 
+2 primeros bits el tipo de instrucción
+4 lsb bits D: fuente
+[5-8] bits destino 
+
+
+
+mov
+10 000 1110 000 1100
+C0     F        D
+
+cmp
+01 000 1100 000 1010
+CO     F        D
+
+beq
+11 000 0000 000 1000
+CO     F        D
+
+add
+00 000 1001 000 1011
+C0     F        D
+
+
+01 000 1100 000 1010 CON BUCLE
+01 000 1110 000 1110
+
+
+
+LAS CONSTANTES EMPIEZA EN EL OFFSET 181+3 
+6 BYTES +1 NUL, LO DEMÁS ES BASURA
+DESPUES DE LAS CONSTANTES VIENE LA LÍNEA DONDE ESTÁN GUARDADAS LAS CONSTANTES POR ORDEN
+
+
+OFFSET 104
+01: INSTRUCCIONES
+02: DATOS
+
+
+
+
+
+

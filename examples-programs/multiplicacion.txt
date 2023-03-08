@@ -1,0 +1,15 @@
+mov  CERO   ,  RD0  
+mov CERO, CONTAD
+BUCLE : cmp CONTAD, NUM2
+beq FIN
+add NUM1, RD0
+add UNO, CONTAD
+cmp CERO, CERO
+beq BUCLE
+FIN: beq FIN
+NUM1  :  dato 0002
+NUM2: dato 0003
+RD0: dato 0000
+CONTAD: dato 0000
+UNO: dato 0001
+CERO: dato 0000

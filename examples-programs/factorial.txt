@@ -1,0 +1,30 @@
+mov UNO, INDICE
+mov UNO, RD0
+BUCFAC: cmp INDICE, NUM
+beq FIN
+add UNO, INDICE
+mov RD0, NUM1
+mov RD0, NUM1
+mov INDICE, NUM2
+mov CERO, RD0
+mov CERO, CONTAD
+
+BUCLE:cmp CONTAD,NUM2
+
+beq FINMUL
+add NUM1, RD0
+add UNO, CONTAD
+cmp CERO, CERO
+beq BUCLE
+FINMUL: cmp CERO, CERO
+beq BUCFAC
+FIN: beq FIN
+
+NUM: dato 0004
+RD0: dato 0004
+UNO: dato 0004
+CERO: dato 0004
+INDICE: dato 0004
+CONTAD: dato 0004
+NUM1: dato 0004
+NUM2: dato 0004
