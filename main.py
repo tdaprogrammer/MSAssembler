@@ -1,24 +1,19 @@
 import sys, re, string, struct, binascii
 from pathlib import Path
+import shutil
 
 '''
 TODO:
-escribir en .dat 30 bytes
-'''
-"""
-add: 0
-cmp: 1
-mov: 2
-beq: 3
-"""
-DAT_FILE = 'C:/Users/Alfredo/Desktop/uni/2 cuatri/ACI/dosboxMS/FICHMS.DAT'
-OUT = 'FICHMS.DAT'
 
-def write_to_dat(file_out, pos=2): # 0xf programas como maximo
-    # leer y luego escribir en la posicion 2 no me voy a complicar...
+'''
+
+DAT_FILE = 'FICHMS.DAT'
+
+def write_to_dat(file_out, pos=2):
     junk = 30
+    shutil.copyfile(DAT_FILE, DAT_FILE+'.copy') # make a copy just in case
     assert(pos >= 0 and pos <= 0xf)
-    to_write = b''
+    buf = b''
     with open(DAT_FILE, 'rb') as f:
         content = ' '
         ind =0
@@ -27,106 +22,88 @@ def write_to_dat(file_out, pos=2): # 0xf programas como maximo
             if ind == pos:
                 x = bytes(file_out,encoding='ascii')
                 x += b"\0"*(30-len(file_out)) 
-                to_write += binascii.unhexlify(binascii.hexlify(x))
+                buf += binascii.unhexlify(binascii.hexlify(x))
             else:
-                to_write += content
+                buf += content
             ind += 1
-    with open(OUT, 'wb') as f:
-        f.write(to_write)
-            
+    with open(DAT_FILE, 'wb') as f:
+        f.write(buf)
 
-
-def pad_to_4_bit(n):
-    return bin(n)[2:].rjust(4,'0')
+def pad_to_7_bit(n):
+    return bin(n)[2:].rjust(7,'0')
 
 class Assembler:
     def __init__(self, code, data):
         self.code = code
-        self.source = code | data # res = {**code, **data}
+        self.source = {**code, **data}
         self.data = { d.name:d.line_number for d in data.values() }
         self.labels = {c.label:c.line_number for c in code.values() if c.label is not None}
-        self.out = []
+        self.ram_content = []
 
     # TODO: class Assembler? una clase para cada instruccion y luego invocar un metodo virtual para evitar ifs...
     def decode_program(self):       
         for i in range(len(self.source)):
             class_name = type(self.source[i]).__name__
-            if  class_name == 'Data':
+            if  class_name == Data.__name__:
                 bin = self.source[i].value
-                self.out.append(int(bin,16))
-            # TODO: quitar Instruction constante magica
-            if class_name == 'Instruction': # FIN: beq no es valido beq tiene que seguir con una etiqueta
-                if self.source[i].name != 'beq': # not beq
+                self.ram_content.append(int(bin,16))
+            elif class_name == Instruction.__name__: 
+                if self.source[i].name != 'beq':
                     arg1, arg2 = self.source[i].args
-                    bin = Instruction.INSTRUCTIONS[self.source[i].name]+'000'+pad_to_4_bit(self.data[arg1])+'000'+pad_to_4_bit(self.data[arg2])
+                    bin = Instruction.INSTRUCTIONS[self.source[i].name]+pad_to_7_bit(self.data[arg1])+pad_to_7_bit(self.data[arg2])
                 else:
                     arg1 = self.source[i].args[0]
-                    bin = Instruction.INSTRUCTIONS[self.source[i].name]+'000'+pad_to_4_bit(0)+'000'+pad_to_4_bit(self.labels[arg1])
-                self.out.append(int(bin,2))
+                    bin = Instruction.INSTRUCTIONS[self.source[i].name]+pad_to_7_bit(0)+pad_to_7_bit(self.labels[arg1])
+                self.ram_content.append(int(bin,2))
             
 
     def write_to_file(self,file_name='PROG2.MS'):
         #f.write(struct.pack('<H', ))
         self.decode_program()
-        written_bytes = 0
+        written_bytes = 4
         with open(file_name, "wb") as f:
-            written_bytes = len(self.code)-1
-            f.write(struct.pack('<I', written_bytes)) # 4 bytes al principio
-            written_bytes //= 2
-            for x in self.out:
-                print(hex(x))
-            for x in self.out:
+            st = len(self.labels)+len(self.data)
+            f.write(struct.pack('<I', st)) # 4 bytes al principio
+            # for i in range(len(self.ram_content)):
+            #     print(hex(self.ram_content[i]))
+            for x in self.ram_content:
                 written_bytes += 2
                 f.write(struct.pack('<H', x))
+                    
+            for _ in range((0x104-written_bytes)): 
+                f.write(struct.pack('<b', 0))
+                written_bytes += 1
             
-            for _ in range((0x80-written_bytes)//2):
-                f.write(struct.pack('<H', 0))
-                written_bytes += 2
-            
-            for _ in range((0x104-written_bytes)//2): 
-                f.write(struct.pack('<H', 0))
-                written_bytes += 2
-            
-            # TODO: y si los datos no val al final sino al principio? como lo interpreta?
+            #TODO: y si los datos no van al final sino al principio? como lo interpreta?
             for val in self.source.values():
-                class_name = type(val).__name__ # TODO: metodo estatico de la clase
-                byte = 1 if class_name == "Instruction" else 2
+                byte = val.get_type()
                 f.write(struct.pack('<b', byte))
                 written_bytes += 1
             
             for _ in range(0x184-written_bytes): 
                 f.write(struct.pack('<b', 0))
             
-            ld = []
+            labels_and_data_names = []
             for i in range(len(self.source)):
-                class_name = type(self.source[i]).__name__ 
-                s = ''
-                nline = 0
-                if class_name == 'Instruction':
-                    if self.source[i].label is not None:
-                        s = self.source[i].label
-                        nline = self.source[i].line_number
-                else:
-                    s = self.source[i].name
-                    nline = self.source[i].line_number
-                if s:
-                    ld.append(nline)
-                    x = bytes(s.upper(),encoding='ascii')
-                    x += b"\0"*(7-len(s)) 
+                name= self.source[i].get_label()
+                nline = self.source[i].line_number
+                if name is not None:
+                    labels_and_data_names.append(nline)
+                    x = bytes(name.upper(),encoding='ascii')
+                    x += b"\0"*(7-len(name)) 
                     f.write(binascii.unhexlify(binascii.hexlify(x)))
-            for nline in ld: 
+            for nline in labels_and_data_names: 
                 f.write(struct.pack('<H', nline))
 
 
 def split_tokens(s):
     arguments = list(map(lambda r : r.strip() ,re.split(r"([,: ])",s)))
-    return [s for s in arguments if s]
+    return [a for a in arguments if a]
 
 class Data:
-    def __init__(self, ins, line_number, splitted_tokens=None):
-        tokens = splitted_tokens
+    def __init__(self, ins, line_number, tokens=None):                         
         self.line_number = line_number
-        if splitted_tokens is None:
+        if tokens is None:
             tokens = split_tokens(ins)
         if Data.is_data(tokens):
             self.name, self.value = self.get_constant(tokens)
@@ -135,6 +112,12 @@ class Data:
         return len(s) == 4 and s[2] == 'dato' and s[1] == ':' and len(s[-1]) == 4 and \
             all(c in string.hexdigits for c in s[-1])
     
+    def get_label(self):
+        return self.name
+
+    def get_type(self):
+        return 0x2
+
     def get_constant(self, s):
         return s[0],s[-1]
 
@@ -151,13 +134,12 @@ class Instruction:
                      "mov": '10',
                      "beq":  '11'
                     })
-    def __init__(self, ins, line_number, splitted_tokens=None):
+    def __init__(self, ins, line_number, tokens=None):
         self.name = ''
         self.line_number = line_number
         self.args = []
-        self.label = None
-        tokens = splitted_tokens
-        if splitted_tokens is None:
+        self.label = None        
+        if tokens is None:
             tokens = split_tokens(ins)
         if self.has_label(tokens):
             self.label = tokens[0] # TODO: don't allow stuff like ':'
@@ -170,8 +152,14 @@ class Instruction:
             syntax_error()
         self.args = args
 
+    def get_label(self):
+        return self.label
+    
+    def get_type(self):
+        return 0x1
+    
     def has_all_letters(self, arg):
-        return re.search('[a-zA-Z]+',arg) # isalpha return True if the string is unicode too
+        return re.search('[a-zA-Z]+',arg) # isalpha return true if the string is unicode too, so I don't want
 
     def parse_add_arguments(self, args):
         if len(args) != 2:
@@ -244,7 +232,7 @@ def main():
     # if len(sys.argv) != 2:
     #     print("error")
     #     return
-    with open("examples-programs/factorial.txt") as f:
+    with open("examples-programs/p2.txt") as f:
         lines = list(filter(lambda x : x,f.read().strip().split("\n")))
     parse_lines(lines)
 

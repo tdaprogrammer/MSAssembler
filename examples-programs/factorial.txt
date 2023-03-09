@@ -4,7 +4,6 @@ BUCFAC: cmp INDICE, NUM
 beq FIN
 add UNO, INDICE
 mov RD0, NUM1
-mov RD0, NUM1
 mov INDICE, NUM2
 mov CERO, RD0
 mov CERO, CONTAD
@@ -18,10 +17,10 @@ FINMUL: cmp CERO, CERO
 beq BUCFAC
 FIN: beq FIN
 NUM: dato 0004
-RD0: dato 0004
-UNO: dato 0004
-CERO: dato 0004
-INDICE: dato 0004
-CONTAD: dato 0004
-NUM1: dato 0004
-NUM2: dato 0004
+RD0: dato 0000
+UNO: dato 0001
+CERO: dato 0000
+INDICE: dato 0000
+CONTAD: dato 0000
+NUM1: dato 0000
+NUM2: dato 0000

@@ -15,7 +15,7 @@ cmp CERO, CERO
 beq BUCLE
 FINMUL: cmp CERO, CERO
 beq BUCFAC
-FIN: beq
+FIN: beq FIN
 NUM: dato 0004
 RD0: dato 0000
 UNO: dato 0001

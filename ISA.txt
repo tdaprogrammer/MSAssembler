@@ -1,8 +1,9 @@
-    C0 
+los primeros 4 bytes son el numero de labels y de contantes que tiene el programa
 cmp: 1
 beq: 3
 add: 0
 mov: 2
+
 16 bits por instruccion 
 2 primeros bits el tipo de instrucción
 4 lsb bits D: fuente
@@ -34,7 +35,7 @@ C0     F        D
 
 
 
-LAS CONSTANTES EMPIEZA EN EL OFFSET 181+3 
+LAS CONSTANTES EMPIEZA EN EL OFFSET 184 
 6 BYTES +1 NUL, LO DEMÁS ES BASURA
 DESPUES DE LAS CONSTANTES VIENE LA LÍNEA DONDE ESTÁN GUARDADAS LAS CONSTANTES POR ORDEN
 
