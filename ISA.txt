@@ -8,7 +8,9 @@ mov: 2
 4 lsb bits D: fuente
 [5-8] bits destino 
 
-
+0x870b
+10  000 1110 000 1011
+mov     
 
 mov
 10 000 1110 000 1100

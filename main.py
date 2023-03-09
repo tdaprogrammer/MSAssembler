@@ -1,11 +1,41 @@
 import sys, re, string, struct, binascii
+from pathlib import Path
 
+'''
+TODO:
+escribir en .dat 30 bytes
+'''
 """
 add: 0
 cmp: 1
 mov: 2
 beq: 3
 """
+DAT_FILE = 'C:/Users/Alfredo/Desktop/uni/2/ACI/dosboxMS/FICHMS.DAT'
+OUT = 'test.DAT'
+
+def write_to_dat(file_out, pos=2): # 0xf programas como maximo
+    # leer y luego escribir en la posicion 2 no me voy a complicar...
+    junk = 30
+    assert(pos >= 0 and pos <= 0xf)
+    to_write = b''
+    with open(DAT_FILE, 'rb') as f:
+        
+        content = ' '
+        ind =0
+        while content:
+            content = f.read(junk)
+            if ind == pos:
+                x = bytes(file_out,encoding='ascii')
+                x += b"\0"*(30-len(file_out)) 
+                to_write += binascii.unhexlify(binascii.hexlify(x))
+            else:
+                to_write += content
+            ind += 1
+    with open(OUT, 'wb') as f:
+        f.write(to_write)
+            
+
 
 def pad_to_4_bit(n):
     return bin(n)[2:].rjust(4,'0')
@@ -201,7 +231,7 @@ def parse_lines(lines):
     # print("code ",code)
     # print("data ", data)
 
-
+# parse arguments
 def main(): 
     assert(Data.is_data(split_tokens("NUM1  :  dato 0002")))
     assert(Data.is_data(split_tokens("CONTAD   : dato 0000")))
@@ -210,13 +240,13 @@ def main():
     assert(Data.is_data(split_tokens("CONTAD:dato 0000")))
     assert(not Data.is_data(split_tokens("CONTAD:dato 000g")))
     assert(Data.is_data(split_tokens("CONTAD:dato 1234")))
-    lines = []
-    # if len(sys.argv) != 2:
-    #     print("error")
-    #     return
-    with open("examples-programs/multiplicacion.txt") as f:
-        lines = list(filter(lambda x : x,f.read().strip().split("\n")))
-    parse_lines(lines)
+    # lines = []
+    # # if len(sys.argv) != 2:
+    # #     print("error")
+    # #     return
+    # with open("examples-programs/multiplicacion.txt") as f:
+    #     lines = list(filter(lambda x : x,f.read().strip().split("\n")))
+    # parse_lines(lines)
 
-
+    write_to_dat("IRONMAN")
 main()
