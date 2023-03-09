@@ -8,9 +8,7 @@ mov RD0, NUM1
 mov INDICE, NUM2
 mov CERO, RD0
 mov CERO, CONTAD
-
 BUCLE:cmp CONTAD,NUM2
-
 beq FINMUL
 add NUM1, RD0
 add UNO, CONTAD
@@ -19,7 +17,6 @@ beq BUCLE
 FINMUL: cmp CERO, CERO
 beq BUCFAC
 FIN: beq FIN
-
 NUM: dato 0004
 RD0: dato 0004
 UNO: dato 0004

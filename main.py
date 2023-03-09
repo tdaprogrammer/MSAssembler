@@ -11,8 +11,8 @@ cmp: 1
 mov: 2
 beq: 3
 """
-DAT_FILE = 'C:/Users/Alfredo/Desktop/uni/2/ACI/dosboxMS/FICHMS.DAT'
-OUT = 'test.DAT'
+DAT_FILE = 'C:/Users/Alfredo/Desktop/uni/2 cuatri/ACI/dosboxMS/FICHMS.DAT'
+OUT = 'FICHMS.DAT'
 
 def write_to_dat(file_out, pos=2): # 0xf programas como maximo
     # leer y luego escribir en la posicion 2 no me voy a complicar...
@@ -20,7 +20,6 @@ def write_to_dat(file_out, pos=2): # 0xf programas como maximo
     assert(pos >= 0 and pos <= 0xf)
     to_write = b''
     with open(DAT_FILE, 'rb') as f:
-        
         content = ' '
         ind =0
         while content:
@@ -66,7 +65,7 @@ class Assembler:
                 self.out.append(int(bin,2))
             
 
-    def write_to_file(self,file_name='test.MS'):
+    def write_to_file(self,file_name='PROG2.MS'):
         #f.write(struct.pack('<H', ))
         self.decode_program()
         written_bytes = 0
@@ -74,6 +73,8 @@ class Assembler:
             written_bytes = len(self.code)-1
             f.write(struct.pack('<I', written_bytes)) # 4 bytes al principio
             written_bytes //= 2
+            for x in self.out:
+                print(hex(x))
             for x in self.out:
                 written_bytes += 2
                 f.write(struct.pack('<H', x))
@@ -110,12 +111,11 @@ class Assembler:
                     nline = self.source[i].line_number
                 if s:
                     ld.append(nline)
-                    written_bytes += 6
-                    x = bytes(s,encoding='ascii')
-                    x += b"\0"*(6-len(s)) 
+                    x = bytes(s.upper(),encoding='ascii')
+                    x += b"\0"*(7-len(s)) 
                     f.write(binascii.unhexlify(binascii.hexlify(x)))
             for nline in ld: 
-                f.write(struct.pack('>H', nline))
+                f.write(struct.pack('<H', nline))
 
 
 def split_tokens(s):
@@ -240,13 +240,13 @@ def main():
     assert(Data.is_data(split_tokens("CONTAD:dato 0000")))
     assert(not Data.is_data(split_tokens("CONTAD:dato 000g")))
     assert(Data.is_data(split_tokens("CONTAD:dato 1234")))
-    # lines = []
-    # # if len(sys.argv) != 2:
-    # #     print("error")
-    # #     return
-    # with open("examples-programs/multiplicacion.txt") as f:
-    #     lines = list(filter(lambda x : x,f.read().strip().split("\n")))
-    # parse_lines(lines)
+    lines = []
+    # if len(sys.argv) != 2:
+    #     print("error")
+    #     return
+    with open("examples-programs/factorial.txt") as f:
+        lines = list(filter(lambda x : x,f.read().strip().split("\n")))
+    parse_lines(lines)
 
     write_to_dat("IRONMAN")
 main()
